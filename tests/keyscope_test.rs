@@ -77,3 +77,68 @@ fn test_unscoped_symbol_flagging() {
         .iter()
         .any(|v| matches!(v, KeyViolation::UnscopedSymbol { .. })));
 }
+
+#[test]
+fn test_oversized_key_detection() {
+    let huge_bytes = vec![0xaa; 128]; // 128 bytes
+    let keys = vec![StorageKeyDefinition {
+        domain: StorageDomain::Persistent,
+        key: KeyType::Bytes(huge_bytes),
+        source_contract: "BlobStorageContract".to_string(),
+    }];
+
+    // Analyze with 64 byte budget
+    let report = CollisionDetector::analyze_with_budget(&keys, 64);
+    assert!(!report.is_clean());
+    assert!(report.violations.iter().any(|v| matches!(
+        v,
+        KeyViolation::OversizedKey { size_bytes, max_recommended: 64, .. } if *size_bytes > 64
+    )));
+}
+
+#[test]
+fn test_nested_tuple_and_i128_keys() {
+    let keys = vec![StorageKeyDefinition {
+        domain: StorageDomain::Instance,
+        key: KeyType::Tuple(vec![
+            KeyType::EnumVariant {
+                enum_name: "OraclePool".to_string(),
+                variant: "TickData".to_string(),
+            },
+            KeyType::I128(-54200),
+            KeyType::Bytes(vec![0x01, 0x02, 0x03]),
+        ]),
+        source_contract: "DexContract".to_string(),
+    }];
+
+    let report = CollisionDetector::analyze(&keys);
+    assert!(report.is_clean());
+    assert_eq!(report.total_keys_analyzed, 1);
+    assert!(report.total_footprint_bytes > 0);
+}
+
+#[test]
+fn test_cross_domain_isolation() {
+    // Exact same key in Instance vs Persistent domains must NOT collide
+    let keys = vec![
+        StorageKeyDefinition {
+            domain: StorageDomain::Instance,
+            key: KeyType::EnumVariant {
+                enum_name: "ConfigKey".to_string(),
+                variant: "Admin".to_string(),
+            },
+            source_contract: "ContractA".to_string(),
+        },
+        StorageKeyDefinition {
+            domain: StorageDomain::Persistent,
+            key: KeyType::EnumVariant {
+                enum_name: "ConfigKey".to_string(),
+                variant: "Admin".to_string(),
+            },
+            source_contract: "ContractB".to_string(),
+        },
+    ];
+
+    let report = CollisionDetector::analyze(&keys);
+    assert!(report.is_clean(), "Different storage domains should not collide");
+}
