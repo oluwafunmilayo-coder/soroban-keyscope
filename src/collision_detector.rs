@@ -15,6 +15,13 @@ pub enum KeyViolation {
 
     #[error("Un-namespaced raw symbol key detected in contract '{contract}': '{symbol}'. Recommend enum-scoped prefix")]
     UnscopedSymbol { contract: String, symbol: String },
+
+    #[error("Oversized storage key in contract '{contract}': size={size_bytes}B exceeds recommended budget of {max_recommended}B")]
+    OversizedKey {
+        contract: String,
+        size_bytes: usize,
+        max_recommended: usize,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -34,19 +41,35 @@ impl AnalysisReport {
 pub struct CollisionDetector;
 
 impl CollisionDetector {
+    pub const DEFAULT_MAX_KEY_SIZE: usize = 64;
+
     pub fn analyze(keys: &[StorageKeyDefinition]) -> AnalysisReport {
+        Self::analyze_with_budget(keys, Self::DEFAULT_MAX_KEY_SIZE)
+    }
+
+    pub fn analyze_with_budget(keys: &[StorageKeyDefinition], max_key_size: usize) -> AnalysisReport {
         let mut report = AnalysisReport::default();
         let mut byte_map: HashMap<(StorageDomain, Vec<u8>), &StorageKeyDefinition> = HashMap::new();
 
         for key_def in keys {
             report.total_keys_analyzed += 1;
             let bytes = key_def.key.to_serialized_bytes();
-            report.total_footprint_bytes += bytes.len();
+            let key_size = bytes.len();
+            report.total_footprint_bytes += key_size;
 
             *report
                 .domain_counts
                 .entry(key_def.domain.to_string())
                 .or_insert(0) += 1;
+
+            // Check key footprint budget
+            if key_size > max_key_size {
+                report.violations.push(KeyViolation::OversizedKey {
+                    contract: key_def.source_contract.clone(),
+                    size_bytes: key_size,
+                    max_recommended: max_key_size,
+                });
+            }
 
             // Check for raw unscoped symbols
             if let KeyType::Symbol(ref sym) = key_def.key {
