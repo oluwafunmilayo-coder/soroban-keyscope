@@ -23,6 +23,8 @@ pub enum KeyType {
     EnumVariant { enum_name: String, variant: String },
     Tuple(Vec<KeyType>),
     Address(String),
+    Bytes(Vec<u8>),
+    I128(i128),
     U32(u32),
 }
 
@@ -53,12 +55,26 @@ impl KeyType {
                 b.extend_from_slice(a.as_bytes());
                 b
             }
+            Self::Bytes(bytes) => {
+                let mut b = vec![0x05, bytes.len() as u8];
+                b.extend_from_slice(bytes);
+                b
+            }
+            Self::I128(val) => {
+                let mut b = vec![0x06];
+                b.extend_from_slice(&val.to_be_bytes());
+                b
+            }
             Self::U32(n) => {
-                let mut b = vec![0x05];
+                let mut b = vec![0x07];
                 b.extend_from_slice(&n.to_be_bytes());
                 b
             }
         }
+    }
+
+    pub fn footprint_size(&self) -> usize {
+        self.to_serialized_bytes().len()
     }
 }
 
