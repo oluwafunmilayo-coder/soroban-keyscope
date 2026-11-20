@@ -31,4 +31,10 @@ fn test_domain_footprint_breakdown() {
     );
     assert_eq!(summary.contract_distribution.get("Contract1"), Some(&2));
     assert_eq!(summary.contract_distribution.get("Contract2"), Some(&1));
+
+    let p_inst = summary.domain_percentage(StorageDomain::Instance);
+    let p_pers = summary.domain_percentage(StorageDomain::Persistent);
+    let p_temp = summary.domain_percentage(StorageDomain::Temporary);
+    let total_pct = p_inst + p_pers + p_temp;
+    assert!((total_pct - 100.0).abs() < 1e-4);
 }
