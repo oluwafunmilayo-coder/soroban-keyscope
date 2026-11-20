@@ -33,3 +33,21 @@ fn test_lint_tuple_discriminants() {
     assert!(warnings[0].contains("empty tuple"));
     assert!(warnings[1].contains("lacks a discriminant"));
 }
+
+#[test]
+fn test_lint_instance_storage_key_size() {
+    let normal_key = StorageKeyDefinition {
+        domain: StorageDomain::Instance,
+        key: KeyType::Symbol("Admin".into()),
+        source_contract: "Vault".into(),
+    };
+    let oversized_key = StorageKeyDefinition {
+        domain: StorageDomain::Instance,
+        key: KeyType::Bytes(vec![0u8; 100]),
+        source_contract: "Vault".into(),
+    };
+
+    let warnings = KeyRulesEngine::lint_instance_storage_keys(&[normal_key, oversized_key], 64);
+    assert_eq!(warnings.len(), 1);
+    assert!(warnings[0].contains("exceeds recommended max threshold of 64 bytes"));
+}
