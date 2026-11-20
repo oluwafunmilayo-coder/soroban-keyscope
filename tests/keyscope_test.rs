@@ -142,3 +142,18 @@ fn test_cross_domain_isolation() {
     let report = CollisionDetector::analyze(&keys);
     assert!(report.is_clean(), "Different storage domains should not collide");
 }
+
+#[test]
+fn test_key_type_display_formatting() {
+    let symbol = KeyType::Symbol("Admin".into());
+    assert_eq!(symbol.to_string(), "Symbol(\"Admin\")");
+
+    let enum_v = KeyType::EnumVariant {
+        enum_name: "Status".into(),
+        variant: "Active".into(),
+    };
+    assert_eq!(enum_v.to_string(), "Status::Active");
+
+    let tuple = KeyType::Tuple(vec![KeyType::U32(1), KeyType::I128(200)]);
+    assert_eq!(tuple.to_string(), "(U32(1), I128(200))");
+}
