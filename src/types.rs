@@ -28,6 +28,23 @@ pub enum KeyType {
     U32(u32),
 }
 
+impl std::fmt::Display for KeyType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Symbol(s) => write!(f, "Symbol(\"{}\")", s),
+            Self::EnumVariant { enum_name, variant } => write!(f, "{}::{}", enum_name, variant),
+            Self::Tuple(items) => {
+                let inner = items.iter().map(|k| k.to_string()).collect::<Vec<_>>().join(", ");
+                write!(f, "({})", inner)
+            }
+            Self::Address(a) => write!(f, "Address({})", a),
+            Self::Bytes(b) => write!(f, "Bytes(len={})", b.len()),
+            Self::I128(n) => write!(f, "I128({})", n),
+            Self::U32(n) => write!(f, "U32({})", n),
+        }
+    }
+}
+
 impl KeyType {
     pub fn to_serialized_bytes(&self) -> Vec<u8> {
         match self {
