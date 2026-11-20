@@ -28,4 +28,18 @@ impl LayoutReporter {
         out.push_str("└─── End of Report ───\n");
         out
     }
+
+    pub fn format_csv_footprint(keys: &[StorageKeyDefinition]) -> String {
+        let mut out = String::from("index,contract,domain,key_size_bytes\n");
+        for (i, k) in keys.iter().enumerate() {
+            out.push_str(&format!(
+                "{},{},{},{}\n",
+                i + 1,
+                k.source_contract,
+                k.domain,
+                k.key.footprint_size()
+            ));
+        }
+        out
+    }
 }
