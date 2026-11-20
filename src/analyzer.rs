@@ -14,6 +14,20 @@ pub struct FootprintSummary {
     pub contract_distribution: HashMap<String, usize>,
 }
 
+impl FootprintSummary {
+    pub fn domain_percentage(&self, domain: StorageDomain) -> f64 {
+        if self.total_bytes == 0 {
+            return 0.0;
+        }
+        let bytes = match domain {
+            StorageDomain::Instance => self.instance_bytes,
+            StorageDomain::Persistent => self.persistent_bytes,
+            StorageDomain::Temporary => self.temporary_bytes,
+        };
+        ((bytes as f64) / (self.total_bytes as f64)) * 100.0
+    }
+}
+
 pub struct StorageAnalyzer;
 
 impl StorageAnalyzer {
