@@ -7,5 +7,5 @@ pub mod types;
 pub use analyzer::{FootprintSummary, StorageAnalyzer};
 pub use collision_detector::{AnalysisReport, CollisionDetector, KeyViolation};
 pub use reporter::LayoutReporter;
-pub use rules::KeyRulesEngine;
+pub use rules::{KeyRulesEngine, TtlAlertLevel};
 pub use types::{KeyType, StorageDomain, StorageKeyDefinition};

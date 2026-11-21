@@ -40,4 +40,25 @@ impl KeyRulesEngine {
         }
         warnings
     }
+
+    pub fn classify_ttl_alert(live_until_ledger: u32, current_ledger: u32, min_threshold: u32) -> TtlAlertLevel {
+        if live_until_ledger <= current_ledger {
+            return TtlAlertLevel::Critical;
+        }
+        let remaining = live_until_ledger - current_ledger;
+        if remaining < min_threshold / 2 {
+            TtlAlertLevel::Critical
+        } else if remaining < min_threshold {
+            TtlAlertLevel::Warning
+        } else {
+            TtlAlertLevel::Safe
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TtlAlertLevel {
+    Safe,
+    Warning,
+    Critical,
 }
