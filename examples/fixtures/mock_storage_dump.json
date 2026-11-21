@@ -1,0 +1,23 @@
+[
+  {
+    "contract": "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+    "domain": "Instance",
+    "key_type": "Admin",
+    "size_bytes": 32,
+    "live_until_ledger": 1050000
+  },
+  {
+    "contract": "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+    "domain": "Persistent",
+    "key_type": "Balance",
+    "size_bytes": 64,
+    "live_until_ledger": 1200000
+  },
+  {
+    "contract": "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+    "domain": "Temporary",
+    "key_type": "Nonce",
+    "size_bytes": 16,
+    "live_until_ledger": 995000
+  }
+]
