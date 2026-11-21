@@ -53,3 +53,27 @@ fn test_mock_storage_dump_fixture_deserialization() {
     assert_eq!(arr[1]["domain"], "Persistent");
     assert_eq!(arr[2]["domain"], "Temporary");
 }
+
+#[test]
+fn test_html_layout_visualization() {
+    let keys = vec![
+        StorageKeyDefinition {
+            domain: StorageDomain::Instance,
+            key: KeyType::Symbol("Config".into()),
+            source_contract: "Pool".into(),
+        },
+        StorageKeyDefinition {
+            domain: StorageDomain::Persistent,
+            key: KeyType::U32(100),
+            source_contract: "Token".into(),
+        },
+    ];
+
+    let summary = StorageAnalyzer::summarize(&keys);
+    let html = LayoutReporter::format_html(&keys, &summary);
+    assert!(html.contains("<!DOCTYPE html>"));
+    assert!(html.contains("Soroban Storage Footprint"));
+    assert!(html.contains("class=\"instance\""));
+    assert!(html.contains("class=\"persistent\""));
+    assert!(html.contains("[Instance] Pool"));
+}
