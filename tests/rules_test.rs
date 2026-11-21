@@ -1,4 +1,4 @@
-use soroban_keyscope::{KeyRulesEngine, KeyType, StorageDomain, StorageKeyDefinition};
+use soroban_keyscope::{KeyRulesEngine, KeyType, StorageDomain, StorageKeyDefinition, TtlAlertLevel};
 
 #[test]
 fn test_lint_tuple_discriminants() {
@@ -50,4 +50,37 @@ fn test_lint_instance_storage_key_size() {
     let warnings = KeyRulesEngine::lint_instance_storage_keys(&[normal_key, oversized_key], 64);
     assert_eq!(warnings.len(), 1);
     assert!(warnings[0].contains("exceeds recommended max threshold of 64 bytes"));
+}
+
+#[test]
+fn test_ttl_alert_level_classifier() {
+    let min_threshold = 10_000u32;
+
+    // Remaining 15,000 >= 10,000 => Safe
+    assert_eq!(
+        KeyRulesEngine::classify_ttl_alert(115_000, 100_000, min_threshold),
+        TtlAlertLevel::Safe
+    );
+
+    // Remaining 7,000 < 10,000 and >= 5,000 => Warning
+    assert_eq!(
+        KeyRulesEngine::classify_ttl_alert(107_000, 100_000, min_threshold),
+        TtlAlertLevel::Warning
+    );
+
+    // Remaining 3,000 < 5,000 => Critical
+    assert_eq!(
+        KeyRulesEngine::classify_ttl_alert(103_000, 100_000, min_threshold),
+        TtlAlertLevel::Critical
+    );
+
+    // Expired or equal => Critical
+    assert_eq!(
+        KeyRulesEngine::classify_ttl_alert(100_000, 100_000, min_threshold),
+        TtlAlertLevel::Critical
+    );
+    assert_eq!(
+        KeyRulesEngine::classify_ttl_alert(99_000, 100_000, min_threshold),
+        TtlAlertLevel::Critical
+    );
 }
