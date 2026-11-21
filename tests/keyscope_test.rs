@@ -157,3 +157,14 @@ fn test_key_type_display_formatting() {
     let tuple = KeyType::Tuple(vec![KeyType::U32(1), KeyType::I128(200)]);
     assert_eq!(tuple.to_string(), "(U32(1), I128(200))");
 }
+
+#[test]
+fn test_cli_guide_exists_and_contains_sections() {
+    let guide_path = std::path::Path::new("docs/CLI_GUIDE.md");
+    assert!(guide_path.exists());
+    let content = std::fs::read_to_string(guide_path).expect("read CLI_GUIDE.md");
+    assert!(content.contains("# Soroban Keyscope CLI Guide"));
+    assert!(content.contains("--min-ttl-ledgers"));
+    assert!(content.contains("Storage Domains & Quota Guidance"));
+    assert!(content.contains("TTL Alert Levels"));
+}
