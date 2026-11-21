@@ -40,3 +40,16 @@ fn test_csv_layout_export() {
     assert!(csv.contains("1,Pool,Instance,"));
     assert!(csv.contains("2,Token,Persistent,"));
 }
+
+#[test]
+fn test_mock_storage_dump_fixture_deserialization() {
+    let fixture_path = std::path::Path::new("examples/fixtures/mock_storage_dump.json");
+    assert!(fixture_path.exists());
+    let raw = std::fs::read_to_string(fixture_path).expect("read mock storage dump");
+    let json: serde_json::Value = serde_json::from_str(&raw).expect("parse json");
+    let arr = json.as_array().expect("dump is array");
+    assert_eq!(arr.len(), 3);
+    assert_eq!(arr[0]["domain"], "Instance");
+    assert_eq!(arr[1]["domain"], "Persistent");
+    assert_eq!(arr[2]["domain"], "Temporary");
+}
