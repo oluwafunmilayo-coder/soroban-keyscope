@@ -67,4 +67,18 @@ impl LayoutReporter {
         out.push_str("</ul>\n</body>\n</html>\n");
         out
     }
+
+    pub fn format_svg_badge(total_bytes: usize) -> String {
+        let color = if total_bytes < 1024 {
+            "#4c1"
+        } else if total_bytes < 10240 {
+            "#dfb317"
+        } else {
+            "#e05d44"
+        };
+        format!(
+            "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"130\" height=\"20\"><g fill=\"#555\"><path d=\"M0 0h65v20H0z\"/><path fill=\"{}\" d=\"M65 0h65v20H65z\"/></g><g fill=\"#fff\" font-family=\"sans-serif\" font-size=\"11\"><text x=\"10\" y=\"14\">footprint</text><text x=\"75\" y=\"14\">{} B</text></g></svg>",
+            color, total_bytes
+        )
+    }
 }
