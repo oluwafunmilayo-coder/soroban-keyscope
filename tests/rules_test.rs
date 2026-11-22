@@ -84,3 +84,22 @@ fn test_ttl_alert_level_classifier() {
         TtlAlertLevel::Critical
     );
 }
+
+#[test]
+fn test_temporary_storage_hazard_detector() {
+    let hazardous_key = StorageKeyDefinition {
+        domain: StorageDomain::Temporary,
+        key: KeyType::Symbol("AdminConfig".into()),
+        source_contract: "VaultContract".into(),
+    };
+    let normal_temp = StorageKeyDefinition {
+        domain: StorageDomain::Temporary,
+        key: KeyType::Symbol("Nonce_123".into()),
+        source_contract: "VaultContract".into(),
+    };
+
+    let warnings = KeyRulesEngine::lint_temporary_storage_hazards(&[hazardous_key, normal_temp]);
+    assert_eq!(warnings.len(), 1);
+    assert!(warnings[0].contains("eviction hazard"));
+    assert!(warnings[0].contains("AdminConfig"));
+}
