@@ -59,4 +59,10 @@ impl StorageAnalyzer {
 
         summary
     }
+
+    pub fn estimate_rent_stroops(bytes: usize, ledgers: u32, is_persistent: bool) -> u64 {
+        let rate_per_kb_ledger = if is_persistent { 10u64 } else { 3u64 };
+        let kb = ((bytes as u64) + 1023) / 1024;
+        kb * rate_per_kb_ledger * (ledgers as u64)
+    }
 }
