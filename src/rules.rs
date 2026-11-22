@@ -41,6 +41,22 @@ impl KeyRulesEngine {
         warnings
     }
 
+    pub fn lint_temporary_storage_hazards(keys: &[StorageKeyDefinition]) -> Vec<String> {
+        let mut warnings = Vec::new();
+        for def in keys {
+            if def.domain == crate::types::StorageDomain::Temporary {
+                let name = def.key.to_string();
+                if name.contains("Admin") || name.contains("Owner") || name.contains("Config") {
+                    warnings.push(format!(
+                        "Contract '{}' stores core protocol state '{}' in Temporary storage (eviction hazard)",
+                        def.source_contract, name
+                    ));
+                }
+            }
+        }
+        warnings
+    }
+
     pub fn classify_ttl_alert(live_until_ledger: u32, current_ledger: u32, min_threshold: u32) -> TtlAlertLevel {
         if live_until_ledger <= current_ledger {
             return TtlAlertLevel::Critical;
