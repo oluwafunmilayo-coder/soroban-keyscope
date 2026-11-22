@@ -38,3 +38,18 @@ fn test_domain_footprint_breakdown() {
     let total_pct = p_inst + p_pers + p_temp;
     assert!((total_pct - 100.0).abs() < 1e-4);
 }
+
+#[test]
+fn test_storage_rent_estimation() {
+    // 500 bytes for 1000 ledgers, persistent: 1 KB * 10 * 1000 = 10,000 stroops
+    let pers_rent = StorageAnalyzer::estimate_rent_stroops(500, 1000, true);
+    assert_eq!(pers_rent, 10_000);
+
+    // 500 bytes for 1000 ledgers, temporary: 1 KB * 3 * 1000 = 3,000 stroops
+    let temp_rent = StorageAnalyzer::estimate_rent_stroops(500, 1000, false);
+    assert_eq!(temp_rent, 3_000);
+
+    // 2500 bytes for 100 ledgers, persistent: 3 KB * 10 * 100 = 3,000 stroops
+    let multi_kb = StorageAnalyzer::estimate_rent_stroops(2500, 100, true);
+    assert_eq!(multi_kb, 3_000);
+}
