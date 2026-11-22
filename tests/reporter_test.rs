@@ -77,3 +77,19 @@ fn test_html_layout_visualization() {
     assert!(html.contains("class=\"persistent\""));
     assert!(html.contains("[Instance] Pool"));
 }
+
+#[test]
+fn test_svg_badge_generation() {
+    let green_badge = LayoutReporter::format_svg_badge(500);
+    assert!(green_badge.contains("<svg"));
+    assert!(green_badge.contains("#4c1"));
+    assert!(green_badge.contains("500 B"));
+
+    let yellow_badge = LayoutReporter::format_svg_badge(5000);
+    assert!(yellow_badge.contains("#dfb317"));
+    assert!(yellow_badge.contains("5000 B"));
+
+    let red_badge = LayoutReporter::format_svg_badge(20000);
+    assert!(red_badge.contains("#e05d44"));
+    assert!(red_badge.contains("20000 B"));
+}
