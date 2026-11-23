@@ -33,8 +33,8 @@ fn test_clean_namespaced_storage_keys() {
 }
 
 #[test]
-fn test_storage_collision_detection() {
-    // Both contracts use identical enum variant name and variant in Persistent domain
+fn test_intra_contract_storage_collision_detection() {
+    // Two storage sites in the SAME contract and SAME domain serializing to identical bytes -> real collision
     let keys = vec![
         StorageKeyDefinition {
             domain: StorageDomain::Persistent,
@@ -50,7 +50,7 @@ fn test_storage_collision_detection() {
                 enum_name: "SharedKey".to_string(),
                 variant: "Config".to_string(),
             },
-            source_contract: "ExternalLibrary".to_string(),
+            source_contract: "ProtocolV1".to_string(),
         },
     ];
 
@@ -60,6 +60,35 @@ fn test_storage_collision_detection() {
         .violations
         .iter()
         .any(|v| matches!(v, KeyViolation::DirectCollision { .. })));
+}
+
+#[test]
+fn test_cross_contract_identical_keys_do_not_collide() {
+    // Soroban isolates storage by contract ID; identical keys in different contracts are NOT collisions
+    let keys = vec![
+        StorageKeyDefinition {
+            domain: StorageDomain::Persistent,
+            key: KeyType::EnumVariant {
+                enum_name: "DataKey".to_string(),
+                variant: "Admin".to_string(),
+            },
+            source_contract: "VaultA".to_string(),
+        },
+        StorageKeyDefinition {
+            domain: StorageDomain::Persistent,
+            key: KeyType::EnumVariant {
+                enum_name: "DataKey".to_string(),
+                variant: "Admin".to_string(),
+            },
+            source_contract: "VaultB".to_string(),
+        },
+    ];
+
+    let report = CollisionDetector::analyze(&keys);
+    assert!(
+        report.is_clean(),
+        "identical keys in distinct Soroban contracts must never be flagged as collisions"
+    );
 }
 
 #[test]
