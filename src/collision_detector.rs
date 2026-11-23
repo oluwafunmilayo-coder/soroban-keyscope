@@ -49,7 +49,10 @@ impl CollisionDetector {
 
     pub fn analyze_with_budget(keys: &[StorageKeyDefinition], max_key_size: usize) -> AnalysisReport {
         let mut report = AnalysisReport::default();
-        let mut byte_map: HashMap<(StorageDomain, Vec<u8>), &StorageKeyDefinition> = HashMap::new();
+        // Soroban isolates storage per contract ID, so collisions are strictly
+        // scoped to (source_contract, storage_domain, serialized_bytes).
+        let mut byte_map: HashMap<(String, StorageDomain, Vec<u8>), &StorageKeyDefinition> =
+            HashMap::new();
 
         for key_def in keys {
             report.total_keys_analyzed += 1;
@@ -79,18 +82,17 @@ impl CollisionDetector {
                 });
             }
 
-            // Check for collision within domain
-            if let Some(existing) = byte_map.get(&(key_def.domain, bytes.clone())) {
-                if existing.source_contract != key_def.source_contract {
-                    report.violations.push(KeyViolation::DirectCollision {
-                        domain: key_def.domain,
-                        contract_a: existing.source_contract.clone(),
-                        contract_b: key_def.source_contract.clone(),
-                        serialized_hex: hex_string(&bytes),
-                    });
-                }
+            // Check for intra-contract collision within the same storage domain
+            let scope_key = (key_def.source_contract.clone(), key_def.domain, bytes.clone());
+            if let Some(existing) = byte_map.get(&scope_key) {
+                report.violations.push(KeyViolation::DirectCollision {
+                    domain: key_def.domain,
+                    contract_a: existing.source_contract.clone(),
+                    contract_b: key_def.source_contract.clone(),
+                    serialized_hex: hex_string(&bytes),
+                });
             } else {
-                byte_map.insert((key_def.domain, bytes), key_def);
+                byte_map.insert(scope_key, key_def);
             }
         }
 
