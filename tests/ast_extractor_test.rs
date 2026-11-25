@@ -33,3 +33,21 @@ fn test_ast_extractor_parses_real_soroban_contract_and_catches_enum_xdr_collisio
     assert_eq!(collisions.len(), 1);
     assert_eq!(collisions[0].colliding_descriptions.len(), 2);
 }
+
+#[test]
+fn test_workspace_ast_analysis_ignores_identical_keys_across_separate_contracts() {
+    let vault_a = r#"
+        #[contracttype]
+        pub enum DataKey { Admin, Fee }
+    "#;
+    let vault_b = r#"
+        #[contracttype]
+        pub enum DataKey { Admin, Fee }
+    "#;
+    let findings = RustAstExtractor::analyze_workspace_sources(
+        &[("VaultA", vault_a), ("VaultB", vault_b)],
+        StorageDomain::Instance,
+    )
+    .unwrap();
+    assert!(findings.is_empty());
+}
