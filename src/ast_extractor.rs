@@ -87,6 +87,20 @@ impl RustAstExtractor {
             })
             .collect()
     }
+
+    /// Analyze multiple Soroban contract source files in a workspace, checking each contract
+    /// independently for intra-contract XDR `ScVal` collisions (zero cross-contract false positives).
+    pub fn analyze_workspace_sources(
+        contracts: &[(&str, &str)],
+        domain: StorageDomain,
+    ) -> Result<Vec<crate::xdr_key::XdrCollisionFinding>, String> {
+        let mut all_defs = Vec::new();
+        for (name, src) in contracts {
+            let schema = Self::extract_from_source(name, src)?;
+            all_defs.extend(Self::to_key_definitions(&schema, domain));
+        }
+        crate::xdr_key::XdrKeyEncoder::detect_intra_contract_xdr_collisions(&all_defs)
+    }
 }
 
 fn has_contracttype_attr(attrs: &[Attribute]) -> bool {
